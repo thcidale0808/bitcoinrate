@@ -1,4 +1,0 @@
-api
-extractor
-migrate
-sharedmodels
