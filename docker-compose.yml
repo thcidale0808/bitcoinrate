@@ -1,0 +1,96 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:11.7
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - overlay
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  unit_test_db:
+    image: labianchin/docker-postgres-for-testing
+    ports:
+      - "5433:5432"
+    networks:
+      - overlay
+    environment:
+      POSTGRES_USER: ${TEST_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TEST_POSTGRES_DB}
+
+  docs:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docs:/docs
+    networks:
+      - overlay
+    environment:
+      SWAGGER_JSON: /docs/swagger.yaml
+
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api:/app/api
+      - ./sharedmodels:/app/sharedmodels
+    networks:
+      - overlay
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      FLASK_APP: ${FLASK_APP}
+
+  extractor:
+    build:
+      context: .
+      dockerfile: ./extractor/Dockerfile
+    volumes:
+      - ./extractor:/app/extractor
+      - ./sharedmodels:/app/sharedmodels
+    networks:
+      - overlay
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      BITCOIN_URL: ${BITCOIN_URL}
+      BITCOIN_API_KEY: ${BITCOIN_API_KEY}
+
+
+  dbmigrations:
+    build:
+      context: .
+      dockerfile: ./migrate/Dockerfile
+    volumes:
+    - ./migrate:/app/migrate
+    - ./sharedmodels:/app/sharedmodels
+    networks:
+      - overlay
+    depends_on:
+      - db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+volumes:
+    pgdata:
+networks:
+  overlay:

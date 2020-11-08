@@ -1,0 +1,80 @@
+openapi: 3.0.1
+info:
+  title: Bitcoin Services API
+  description: This API provides endpoints to retrieve Bitcoin to USD exchange rates
+  version: 1.0.0
+servers:
+- url: http://localhost:5000/v1
+paths:
+  /bitcoinrate:
+    get:
+      tags:
+      - bitcoinrates
+      summary: Get bitcoin to usd rates for a date range
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+          description: Start date of the range using format YYYYMMDD
+        - in: query
+          name: end_date
+          schema:
+            type: string
+          description: End date of the range using format YYYYMMDD
+      description: Returns bitcoin to usd rates for a date range
+      operationId: getBitcoinRateList
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BitcoinRateResponse'
+        404:
+          description: Rates not found in Database
+          content: {}
+  /bitcoinrate/latest:
+    get:
+      tags:
+        - latest
+      summary: Get latest bitcoin to usd rate
+      description: Returns the latest bitcoin to usd rate
+      operationId: getLatestBitcoinRate
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitcoinRateResponse'
+        404:
+          description: Rate not found in Database
+          content: {}
+components:
+  schemas:
+    BitcoinRateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        source_currency:
+          type: string
+          example: BTC
+        target_currency:
+          type: string
+          example: USD
+        value:
+          type: string
+          example: 2343.90
+        currency_datetime:
+          type: available
+          format: date-time
+          example: "2020-11-07T21:51:05"
+        last_update:
+          type: available
+          format: date-time
+          example: "2020-11-07T21:51:08.670858"
